@@ -65,11 +65,8 @@
                                             <div class="form-text">The OpenRouter model identifier to use</div>
                                         </div>
                                         
-                                        <div class="mb-3">
-                                            <label for="api_key" class="form-label">OpenRouter API Key</label>
-                                            <input type="password" class="form-control" id="api_key" name="api_key" 
-                                                   placeholder="sk-or-..." value="{{ config.get('openrouter_api_key', '') }}">
-                                            <div class="form-text">Your OpenRouter API key (sk-or-...)</div>
+                                        <div class="mb-3 alert alert-info">
+                                            <strong>API Key Required:</strong> Please set your OpenRouter API key in the Secrets tab (Tools > Secrets) with the key name "OPENROUTER_API_KEY"
                                         </div>
                                         
                                         <div class="row">
