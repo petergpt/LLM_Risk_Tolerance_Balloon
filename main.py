@@ -71,6 +71,9 @@ def run_bart_for_model(model_name, config, api_key=None):
         'summary': log_data['summary']
     }
 
+def get_timestamp():
+    return datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
 def write_combined_csv(all_results, output_dir="logs"):
     """
     Write one big CSV with all balloon data from every model.
@@ -78,7 +81,7 @@ def write_combined_csv(all_results, output_dir="logs"):
     'pumps_attempted', 'burst', 'earnings', and 'choices'.
     """
     ensure_dir_exists(output_dir)
-    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    timestamp = get_timestamp()
     filename = f"{output_dir}/BART_combined_{timestamp}.csv"
 
     fieldnames = [
@@ -98,6 +101,9 @@ def write_combined_csv(all_results, output_dir="logs"):
             # Make sure 'choices' is a string
             if isinstance(row.get("choices"), list):
                 row["choices"] = ", ".join(row["choices"])
+            # Remove full_responses if present
+            if "full_responses" in row:
+                row.pop("full_responses", None)
             writer.writerow(row)
 
     logging.info(f"Combined CSV written to: {filename}")
