@@ -1,0 +1,6 @@
+balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
+1,6,6,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"
+2,2,2,True,0.0,"PUMP, PUMP"
+3,10,10,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"
+4,11,11,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"
+5,13,13,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"

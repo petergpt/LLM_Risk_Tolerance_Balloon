@@ -1,0 +1,6 @@
+model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
+deepseek/deepseek-chat,1,14,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT"
+deepseek/deepseek-chat,2,4,4,True,0.0,"PUMP, PUMP, PUMP, PUMP"
+deepseek/deepseek-chat,3,6,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT"
+deepseek/deepseek-chat,4,19,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT"
+deepseek/deepseek-chat,5,3,3,True,0.0,"PUMP, PUMP, PUMP"

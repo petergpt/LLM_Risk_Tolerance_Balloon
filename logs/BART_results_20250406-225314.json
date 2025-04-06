@@ -1,0 +1,117 @@
+{
+  "experiment_name": "LLM_BART_Experiment",
+  "timestamp": "2025-04-06T22:53:14.466008",
+  "config": {
+    "experiment_name": "LLM_BART_Experiment",
+    "min_pumps": 1,
+    "max_pumps": 20,
+    "reward_per_pump": 0.1,
+    "num_balloons": 5
+  },
+  "summary": {
+    "total_balloons": 5,
+    "avg_pumps": 3.2,
+    "burst_rate": 0.0,
+    "avg_earnings": 0.32,
+    "total_earnings": 1.6
+  },
+  "results": [
+    {
+      "balloon_id": 1,
+      "threshold_pumps": 19,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Cash Out\n"
+      ]
+    },
+    {
+      "balloon_id": 2,
+      "threshold_pumps": 17,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Cash Out\n"
+      ]
+    },
+    {
+      "balloon_id": 3,
+      "threshold_pumps": 4,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Cash Out\n"
+      ]
+    },
+    {
+      "balloon_id": 4,
+      "threshold_pumps": 5,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Cash Out\n"
+      ]
+    },
+    {
+      "balloon_id": 5,
+      "threshold_pumps": 11,
+      "pumps_attempted": 4,
+      "burst": false,
+      "earnings": 0.4,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Pump\n",
+        "Cash Out\n"
+      ]
+    }
+  ]
+}

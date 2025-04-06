@@ -1,0 +1,130 @@
+{
+  "experiment_name": "LLM_BART_Experiment",
+  "timestamp": "2025-04-06T23:09:41.651608",
+  "config": {
+    "experiment_name": "LLM_BART_Experiment",
+    "min_pumps": 1,
+    "max_pumps": 20,
+    "reward_per_pump": 0.1,
+    "num_balloons": 5
+  },
+  "summary": {
+    "total_balloons": 5,
+    "avg_pumps": 5.2,
+    "burst_rate": 0.8,
+    "avg_earnings": 0.14,
+    "total_earnings": 0.7
+  },
+  "results": [
+    {
+      "balloon_id": 1,
+      "threshold_pumps": 1,
+      "pumps_attempted": 1,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 2,
+      "threshold_pumps": 5,
+      "pumps_attempted": 5,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 3,
+      "threshold_pumps": 20,
+      "pumps_attempted": 7,
+      "burst": false,
+      "earnings": 0.7,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    },
+    {
+      "balloon_id": 4,
+      "threshold_pumps": 10,
+      "pumps_attempted": 10,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 5,
+      "threshold_pumps": 3,
+      "pumps_attempted": 3,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump"
+      ]
+    }
+  ],
+  "model": "anthropic/claude-3.7-sonnet"
+}

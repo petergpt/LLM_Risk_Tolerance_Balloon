@@ -1,0 +1,102 @@
+{
+  "experiment_name": "LLM_BART_Experiment",
+  "timestamp": "2025-04-06T23:09:18.948094",
+  "config": {
+    "experiment_name": "LLM_BART_Experiment",
+    "min_pumps": 1,
+    "max_pumps": 20,
+    "reward_per_pump": 0.1,
+    "num_balloons": 5
+  },
+  "summary": {
+    "total_balloons": 5,
+    "avg_pumps": 2.0,
+    "burst_rate": 0.4,
+    "avg_earnings": 0.16,
+    "total_earnings": 0.8
+  },
+  "results": [
+    {
+      "balloon_id": 1,
+      "threshold_pumps": 1,
+      "pumps_attempted": 1,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 2,
+      "threshold_pumps": 14,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    },
+    {
+      "balloon_id": 3,
+      "threshold_pumps": 1,
+      "pumps_attempted": 1,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 4,
+      "threshold_pumps": 17,
+      "pumps_attempted": 3,
+      "burst": false,
+      "earnings": 0.3,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    },
+    {
+      "balloon_id": 5,
+      "threshold_pumps": 8,
+      "pumps_attempted": 2,
+      "burst": false,
+      "earnings": 0.2,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    }
+  ],
+  "model": "openai/gpt-4o-mini"
+}

@@ -1,0 +1,148 @@
+{
+  "experiment_name": "LLM_BART_Experiment",
+  "timestamp": "2025-04-06T22:38:48.244257",
+  "config": {
+    "experiment_name": "LLM_BART_Experiment",
+    "min_pumps": 1,
+    "max_pumps": 20,
+    "reward_per_pump": 0.1,
+    "num_balloons": 5,
+    "model": "openai/gpt-4o",
+    "openrouter_api_key": "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",
+    "output_dir": "logs",
+    "log_json": true,
+    "log_csv": true
+  },
+  "summary": {
+    "total_balloons": 5,
+    "avg_pumps": 6.2,
+    "burst_rate": 0.4,
+    "avg_earnings": 0.46,
+    "total_earnings": 2.3
+  },
+  "results": [
+    {
+      "balloon_id": 1,
+      "threshold_pumps": 15,
+      "pumps_attempted": 10,
+      "burst": false,
+      "earnings": 1.0,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    },
+    {
+      "balloon_id": 2,
+      "threshold_pumps": 12,
+      "pumps_attempted": 7,
+      "burst": false,
+      "earnings": 0.7,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    },
+    {
+      "balloon_id": 3,
+      "threshold_pumps": 6,
+      "pumps_attempted": 6,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 4,
+      "threshold_pumps": 2,
+      "pumps_attempted": 2,
+      "burst": true,
+      "earnings": 0.0,
+      "choices": [
+        "PUMP",
+        "PUMP"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump"
+      ]
+    },
+    {
+      "balloon_id": 5,
+      "threshold_pumps": 10,
+      "pumps_attempted": 6,
+      "burst": false,
+      "earnings": 0.6,
+      "choices": [
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "PUMP",
+        "CASH OUT"
+      ],
+      "full_responses": [
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Pump",
+        "Cash Out"
+      ]
+    }
+  ]
+}
