@@ -20,9 +20,8 @@ def load_config():
         with open('bart_config.yaml', 'r') as file:
             config = yaml.safe_load(file)
             
-        # Add API key from environment if not in config
-        if not config.get('openrouter_api_key'):
-            config['openrouter_api_key'] = os.environ.get('OPENROUTER_API_KEY', '')
+        # Always get API key from environment
+        config['openrouter_api_key'] = os.environ.get('OPENROUTER_API_KEY', '')
             
         return config
     except Exception as e:
