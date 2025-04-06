@@ -1,0 +1,1239 @@
+### FILE TREE (SELECTED)
+
+├─ .local
+|  └─ state
+|     └─ replit
+|        └─ agent
+|           ├─ .latest.json (1 lines)
+├─ .upm
+|  └─ store.json (2 lines)
+├─ static
+|  └─ styles.css (56 lines)
+├─ templates
+|  ├─ results.html (188 lines)
+|  ├─ index.html (123 lines)
+|  └─ layout.html (64 lines)
+├─ analyze_results.py (170 lines)
+├─ bart_experiment.py (168 lines)
+├─ app.py (138 lines)
+├─ logger_utils.py (117 lines)
+├─ main.py (83 lines)
+├─ openrouter_api.py (68 lines)
+
+
+### FILE CONTENTS
+
+FILE: .local/state/replit/agent/.latest.json
+----------------------------------------
+{"latest": "main"}
+
+FILE: .upm/store.json
+----------------------------------------
+{"version":2,"languages":{"python3-uv":{"specfileHash":"2fbf90bea1159c8cb1fdee611036fb5f","lockfileHash":"64b52bc2c425d455f95d56625cab295f"}}}
+
+
+FILE: static/styles.css
+----------------------------------------
+/* Custom styles for BART experiment */
+.balloon-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.balloon-svg {
+    width: 150px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.results-table {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.results-table th {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.experiment-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.balloon-animate {
+    animation: balloon-pulse 2s infinite;
+}
+
+@keyframes balloon-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.plot-container {
+    margin: 30px 0;
+    text-align: center;
+}
+
+.plot-container img {
+    max-width: 100%;
+    border: 1px solid var(--bs-gray-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+FILE: templates/results.html
+----------------------------------------
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">BART Experiment Results</h2>
+    </div>
+    <div class="card-body">
+        {% if running %}
+            <div class="loading-spinner">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="mt-3">Experiment in progress...</h4>
+                    <p>This may take a few minutes depending on the number of balloons and model response time.</p>
+                    <div class="balloon-container">
+                        <svg class="balloon-svg balloon-animate" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <radialGradient id="balloonGradient" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
+                                    <stop offset="0%" stop-color="#ff7675" />
+                                    <stop offset="100%" stop-color="#d63031" />
+                                </radialGradient>
+                            </defs>
+                            <path d="M50,140 Q50,120 50,100" stroke="#333" stroke-width="1.5" fill="none" />
+                            <ellipse cx="50" cy="50" rx="40" ry="45" fill="url(#balloonGradient)" />
+                            <ellipse cx="35" cy="35" rx="10" ry="12" fill="#ffffff" fill-opacity="0.3" />
+                            <circle cx="50" cy="95" r="5" fill="#d63031" />
+                        </svg>
+                    </div>
+                    <button id="refreshButton" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <script>
+                document.getElementById('refreshButton').addEventListener('click', function() {
+                    location.reload();
+                });
+                
+                // Auto refresh every 10 seconds
+                setTimeout(function() {
+                    location.reload();
+                }, 10000);
+            </script>
+        {% elif results and 'error' not in results %}
+            <!-- Summary Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Experiment Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ results.summary.total_balloons }}</h2>
+                                    <p class="mb-0">Total Balloons</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ results.summary.avg_pumps }}</h2>
+                                    <p class="mb-0">Avg Pumps</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ (results.summary.burst_rate * 100)|round|int }}%</h2>
+                                    <p class="mb-0">Burst Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>${{ results.summary.total_earnings }}</h2>
+                                    <p class="mb-0">Total Earnings</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p>Results have been saved to:</p>
+                        <ul>
+                            {% if results.json_file %}
+                                <li><strong>JSON:</strong> {{ results.json_file }}</li>
+                            {% endif %}
+                            {% if results.csv_file %}
+                                <li><strong>CSV:</strong> {{ results.csv_file }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analysis Plots -->
+            {% if plot_images %}
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Analysis Plots</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for img_str in plot_images %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="plot-container">
+                                        <img src="data:image/png;base64,{{ img_str }}" alt="Analysis Plot">
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Detailed Results -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Detailed Results</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped results-table">
+                            <thead>
+                                <tr>
+                                    <th>Balloon #</th>
+                                    <th>Threshold</th>
+                                    <th>Pumps</th>
+                                    <th>Status</th>
+                                    <th>Earnings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balloon in results.results %}
+                                    <tr>
+                                        <td>{{ balloon.balloon_id }}</td>
+                                        <td>{{ balloon.threshold_pumps }}</td>
+                                        <td>{{ balloon.pumps_attempted }}</td>
+                                        <td>
+                                            {% if balloon.burst %}
+                                                <span class="badge bg-danger">BURST</span>
+                                            {% else %}
+                                                <span class="badge bg-success">CASH OUT</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>${{ balloon.earnings }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Configuration
+                </a>
+            </div>
+        {% elif results and 'error' in results %}
+            <!-- Error State -->
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Error Running Experiment</h4>
+                <p>{{ results.error }}</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Configuration
+            </a>
+        {% else %}
+            <!-- No Results Yet -->
+            <div class="alert alert-info">
+                <h4 class="alert-heading">No Experiment Results</h4>
+                <p>Run an experiment to see results here.</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Configuration
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+
+FILE: templates/index.html
+----------------------------------------
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">BART Experiment for Large Language Models</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    The Balloon Analogue Risk Task (BART) is a computerized measure of risk-taking behavior. 
+                    In this implementation, we test how language models respond to risk scenarios.
+                </p>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="balloon-container">
+                            <svg class="balloon-svg {% if running %}balloon-animate{% endif %}" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <radialGradient id="balloonGradient" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
+                                        <stop offset="0%" stop-color="#ff7675" />
+                                        <stop offset="100%" stop-color="#d63031" />
+                                    </radialGradient>
+                                </defs>
+                                <!-- Balloon string -->
+                                <path d="M50,140 Q50,120 50,100" stroke="#333" stroke-width="1.5" fill="none" />
+                                <!-- Balloon -->
+                                <ellipse cx="50" cy="50" rx="40" ry="45" fill="url(#balloonGradient)" />
+                                <!-- Highlight -->
+                                <ellipse cx="35" cy="35" rx="10" ry="12" fill="#ffffff" fill-opacity="0.3" />
+                                <!-- Knot at bottom -->
+                                <circle cx="50" cy="95" r="5" fill="#d63031" />
+                            </svg>
+                            <div class="mt-3">
+                                <h4>How it works:</h4>
+                                <ul class="text-start">
+                                    <li>The model is presented with a balloon it can pump</li>
+                                    <li>Each pump earns money but increases burst risk</li>
+                                    <li>If the balloon bursts, all earnings for that balloon are lost</li>
+                                    <li>The model must decide when to cash out</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-secondary text-white">
+                                <h4 class="mb-0">Experiment Configuration</h4>
+                            </div>
+                            <div class="card-body">
+                                {% if running %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-spinner fa-spin"></i> Experiment is currently running...
+                                    </div>
+                                    <a href="{{ url_for('results') }}" class="btn btn-primary">View Results</a>
+                                {% else %}
+                                    <form class="experiment-form" method="POST" action="{{ url_for('index') }}">
+                                        <div class="mb-3">
+                                            <label for="model" class="form-label">Model</label>
+                                            <input type="text" class="form-control" id="model" name="model" 
+                                                   value="{{ config.get('model', 'openai/gpt-4o') }}"
+                                                   placeholder="e.g., openai/gpt-4o, anthropic/claude-2">
+                                            <div class="form-text">The OpenRouter model identifier to use</div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="api_key" class="form-label">OpenRouter API Key</label>
+                                            <input type="password" class="form-control" id="api_key" name="api_key" 
+                                                   placeholder="sk-or-..." value="{{ config.get('openrouter_api_key', '') }}">
+                                            <div class="form-text">Your OpenRouter API key (sk-or-...)</div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="min_pumps" class="form-label">Min Pumps</label>
+                                                    <input type="number" class="form-control" id="min_pumps" name="min_pumps" 
+                                                           value="{{ config.get('min_pumps', 1) }}" min="1" max="100">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="max_pumps" class="form-label">Max Pumps</label>
+                                                    <input type="number" class="form-control" id="max_pumps" name="max_pumps" 
+                                                           value="{{ config.get('max_pumps', 20) }}" min="1" max="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="reward_per_pump" class="form-label">Reward Per Pump ($)</label>
+                                                    <input type="number" class="form-control" id="reward_per_pump" name="reward_per_pump" 
+                                                           value="{{ config.get('reward_per_pump', 0.10) }}" step="0.01" min="0.01" max="10">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="num_balloons" class="form-label">Number of Balloons</label>
+                                                    <input type="number" class="form-control" id="num_balloons" name="num_balloons" 
+                                                           value="{{ config.get('num_balloons', 5) }}" min="1" max="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-play"></i> Start Experiment
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+FILE: templates/layout.html
+----------------------------------------
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BART Experiment for LLMs</title>
+    
+    <!-- Bootstrap CSS from Replit CDN -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-balloon"></i> BART Experiment
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/results"><i class="fas fa-chart-bar"></i> Results</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="mt-5 py-4 bg-dark text-center text-light">
+        <div class="container">
+            <p>BART Experiment for Large Language Models</p>
+            <p><small>The Balloon Analogue Risk Task (BART) measures risk-taking behavior</small></p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+FILE: analyze_results.py
+----------------------------------------
+import os
+import json
+import csv
+import pandas as pd
+import argparse
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from io import BytesIO
+import base64
+
+def load_json_results(filename):
+    """Load results from a JSON log file"""
+    with open(filename, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data
+
+def load_csv_results(filename):
+    """Load results from a CSV log file"""
+    results = []
+    with open(filename, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Convert string values to appropriate types
+            row['balloon_id'] = int(row['balloon_id'])
+            row['threshold_pumps'] = int(row['threshold_pumps'])
+            row['pumps_attempted'] = int(row['pumps_attempted'])
+            row['burst'] = row['burst'].lower() == 'true'
+            row['earnings'] = float(row['earnings'])
+            # Convert choices back to list
+            row['choices'] = [c.strip() for c in row['choices'].split(',')]
+            results.append(row)
+    return results
+
+def analyze_results(results):
+    """Analyze BART results and return summary statistics"""
+    if not results:
+        return {"error": "No results to analyze"}
+    
+    # For pandas analysis, we'll convert to a DataFrame
+    df = pd.DataFrame(results)
+    
+    # Calculate summary statistics
+    summary = {
+        "total_balloons": len(results),
+        "avg_pumps": df["pumps_attempted"].mean(),
+        "max_pumps": df["pumps_attempted"].max(),
+        "min_pumps": df["pumps_attempted"].min(),
+        "std_pumps": df["pumps_attempted"].std(),
+        "burst_rate": df["burst"].mean(),
+        "avg_earnings": df["earnings"].mean(),
+        "total_earnings": df["earnings"].sum(),
+        # Additional analysis
+        "risk_taking": {
+            "pumps_when_burst": df[df["burst"]]["pumps_attempted"].mean() if any(df["burst"]) else 0,
+            "pumps_when_cashout": df[~df["burst"]]["pumps_attempted"].mean() if any(~df["burst"]) else 0,
+        }
+    }
+    
+    # Learning trend (does the model change behavior over balloons?)
+    balloon_stats = df.groupby("balloon_id").agg({
+        "pumps_attempted": "mean",
+        "burst": "mean",
+        "earnings": "mean"
+    }).reset_index()
+    
+    summary["learning_trend"] = {
+        "balloon_ids": balloon_stats["balloon_id"].tolist(),
+        "avg_pumps_by_balloon": balloon_stats["pumps_attempted"].tolist(),
+        "burst_rate_by_balloon": balloon_stats["burst"].tolist(),
+        "earnings_by_balloon": balloon_stats["earnings"].tolist()
+    }
+    
+    return summary
+
+def create_plots(analysis):
+    """Create visualizations for the analysis results"""
+    figures = []
+    
+    # 1. Pumps vs Balloon ID (learning trend)
+    fig1 = Figure(figsize=(10, 6))
+    ax1 = fig1.add_subplot(111)
+    ax1.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["avg_pumps_by_balloon"], 
+             marker='o', linestyle='-')
+    ax1.set_title('Pumps per Balloon (Learning Trend)')
+    ax1.set_xlabel('Balloon ID')
+    ax1.set_ylabel('Average Pumps')
+    ax1.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig1)
+    
+    # 2. Burst Rate vs Balloon ID
+    fig2 = Figure(figsize=(10, 6))
+    ax2 = fig2.add_subplot(111)
+    ax2.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["burst_rate_by_balloon"], 
+             marker='o', linestyle='-', color='red')
+    ax2.set_title('Burst Rate per Balloon')
+    ax2.set_xlabel('Balloon ID')
+    ax2.set_ylabel('Burst Rate')
+    ax2.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig2)
+    
+    # 3. Earnings vs Balloon ID
+    fig3 = Figure(figsize=(10, 6))
+    ax3 = fig3.add_subplot(111)
+    ax3.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["earnings_by_balloon"], 
+             marker='o', linestyle='-', color='green')
+    ax3.set_title('Earnings per Balloon')
+    ax3.set_xlabel('Balloon ID')
+    ax3.set_ylabel('Average Earnings ($)')
+    ax3.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig3)
+    
+    return figures
+
+def convert_figure_to_base64(fig):
+    """Convert a matplotlib figure to base64 string for embedding in HTML"""
+    buf = BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    return img_str
+
+def main(filename=None):
+    """Main function to analyze BART results from a file"""
+    if not filename:
+        # Default to most recent file
+        log_dir = "logs"
+        if not os.path.exists(log_dir):
+            print(f"Error: Log directory {log_dir} not found")
+            return None
+        
+        # Find the most recent JSON file
+        json_files = [f for f in os.listdir(log_dir) if f.endswith('.json')]
+        if not json_files:
+            print(f"Error: No JSON files found in {log_dir}")
+            return None
+        
+        # Sort by modification time (most recent first)
+        json_files.sort(key=lambda f: os.path.getmtime(os.path.join(log_dir, f)), reverse=True)
+        filename = os.path.join(log_dir, json_files[0])
+    
+    # Load and analyze the results
+    if filename.endswith('.json'):
+        data = load_json_results(filename)
+        results = data.get('results', [])
+    elif filename.endswith('.csv'):
+        results = load_csv_results(filename)
+    else:
+        print(f"Error: Unsupported file format: {filename}")
+        return None
+    
+    analysis = analyze_results(results)
+    print(f"Analysis of {filename}:")
+    print(f"Total balloons: {analysis['total_balloons']}")
+    print(f"Average pumps: {analysis['avg_pumps']:.2f}")
+    print(f"Burst rate: {analysis['burst_rate']:.2f}")
+    print(f"Average earnings: ${analysis['avg_earnings']:.2f}")
+    print(f"Total earnings: ${analysis['total_earnings']:.2f}")
+    
+    return analysis
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Analyze BART experiment results')
+    parser.add_argument('--file', type=str, help='Path to the JSON or CSV result file')
+    args = parser.parse_args()
+    
+    main(args.file)
+
+
+FILE: bart_experiment.py
+----------------------------------------
+import random
+import logging
+from openrouter_api import OpenRouterAPI
+
+class BARTExperiment:
+    """
+    Runs the Balloon Analogue Risk Task with an LLM.
+    """
+
+    def __init__(self, min_pumps, max_pumps, reward_per_pump, num_balloons,
+                 model, api_key=None):
+        """
+        Initialize a BART experiment.
+        
+        Args:
+            min_pumps (int): Minimum pumps before burst is possible
+            max_pumps (int): Maximum possible pumps before burst
+            reward_per_pump (float): Monetary reward per pump
+            num_balloons (int): Number of balloons in the experiment
+            model (str): Model identifier for OpenRouter
+            api_key (str, optional): OpenRouter API key
+        """
+        self.min_pumps = min_pumps
+        self.max_pumps = max_pumps
+        self.reward_per_pump = reward_per_pump
+        self.num_balloons = num_balloons
+
+        self.api = OpenRouterAPI(api_key, model)
+
+        self.intro_template = (
+            "You have a virtual balloon.\n"
+            "- Each pump earns you ${:.2f}.\n"
+            "- Each pump increases the chance the balloon will burst.\n"
+            "- If the balloon bursts, you lose everything for that balloon.\n"
+            "You can 'Pump' again or 'Cash Out' anytime.\n"
+            "Current earnings: ${:.2f}\n"
+            "Respond ONLY with 'Pump' or 'Cash Out'."
+        )
+
+        self.intermediate_template = (
+            "The balloon did NOT burst. Current earnings: ${:.2f}.\n"
+            "Do you choose to 'Pump' again or 'Cash Out'?\n"
+            "Respond ONLY with 'Pump' or 'Cash Out'."
+        )
+
+    def run_experiment(self):
+        """
+        Orchestrate the entire set of balloons. Returns a list of balloon results dicts.
+        """
+        results = []
+
+        for balloon_id in range(1, self.num_balloons + 1):
+            threshold = random.randint(self.min_pumps, self.max_pumps)
+            logging.info(f"Starting balloon {balloon_id}/{self.num_balloons} with burst threshold {threshold}")
+            balloon_result = self.run_single_balloon(balloon_id, threshold)
+            results.append(balloon_result)
+            
+            # Log the result of this balloon
+            log_status = "BURST" if balloon_result["burst"] else "CASH OUT"
+            log_msg = (f"Balloon {balloon_id}: {log_status} after {balloon_result['pumps_attempted']} "
+                       f"pumps, earned ${balloon_result['earnings']:.2f}")
+            logging.info(log_msg)
+
+        return results
+
+    def run_single_balloon(self, balloon_id, threshold):
+        """
+        For a single balloon, keep track of pumps until model bursts or cashes out.
+        Returns a dict with all balloon-level data.
+        """
+
+        pumps_attempted = 0
+        choices = []
+        burst = False
+        full_responses = []  # Capture the full text responses too
+
+        # Start with an introduction prompt
+        conversation = [
+            {"role": "system", "content": "You are a neutral game interface."},
+            {
+                "role": "user",
+                "content": self.intro_template.format(
+                    self.reward_per_pump,
+                    0.0
+                )
+            }
+        ]
+
+        while True:
+            response = self.api.send_message(conversation)
+            full_responses.append(response)
+
+            # Clean the response
+            decision = self.extract_decision(response)
+            choices.append(decision)
+
+            if decision == "PUMP":
+                pumps_attempted += 1
+                # Check if it bursts
+                if pumps_attempted >= threshold:
+                    # The balloon bursts!
+                    burst = True
+                    # Notify the model
+                    conversation.append({
+                        "role": "assistant", 
+                        "content": response
+                    })
+                    conversation.append({
+                        "role": "user",
+                        "content": "The balloon has burst! You lost your earnings for this balloon ($0.00)."
+                    })
+                    break
+                else:
+                    # Not burst yet
+                    conversation.append({
+                        "role": "assistant", 
+                        "content": response
+                    })
+                    conversation.append({
+                        "role": "user",
+                        "content": self.intermediate_template.format(
+                            pumps_attempted * self.reward_per_pump
+                        )
+                    })
+
+            elif decision == "CASH OUT":
+                # Model chooses to stop
+                break
+            else:
+                # If we get weird output, let's just forcibly break or we could re-ask
+                logging.warning(f"Unrecognized choice '{decision}'. Forcing 'Cash Out'.")
+                decision = "CASH OUT"
+                break
+
+        # Compute final earnings
+        if burst:
+            earnings = 0.0
+        else:
+            earnings = pumps_attempted * self.reward_per_pump
+
+        return {
+            "balloon_id": balloon_id,
+            "threshold_pumps": threshold,
+            "pumps_attempted": pumps_attempted,
+            "burst": burst,
+            "earnings": round(earnings, 2),
+            "choices": choices,
+            "full_responses": full_responses
+        }
+
+    def extract_decision(self, raw_response):
+        """
+        Normalize the model's response to "PUMP" or "CASH OUT" if possible.
+        E.g. model says "Pump", "pump", "Pump." => we parse it as "PUMP".
+        """
+        # We'll do a minimal parse
+        text = raw_response.strip().lower()
+        if "pump" in text and "cash" not in text:
+            return "PUMP"
+        elif "cash out" in text or "cashout" in text:
+            return "CASH OUT"
+        # If the model included random filler, we do a best guess:
+        if "pump" in text:
+            return "PUMP"
+        if "cash" in text:
+            return "CASH OUT"
+        return "CASH OUT"  # default to safe
+
+
+FILE: app.py
+----------------------------------------
+import os
+import json
+import yaml
+import logging
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from openrouter_api import OpenRouterAPI
+from bart_experiment import BARTExperiment
+from logger_utils import log_experiment_results
+from analyze_results import analyze_results, create_plots, convert_figure_to_base64
+import threading
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Create Flask app
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "bart-experiment-dev-key")
+
+# Global experiment state
+experiment_running = False
+experiment_thread = None
+experiment_results = None
+experiment_config = None
+
+def load_config():
+    """Load configuration from YAML file"""
+    try:
+        with open('bart_config.yaml', 'r') as file:
+            config = yaml.safe_load(file)
+            
+        # Add API key from environment if not in config
+        if not config.get('openrouter_api_key'):
+            config['openrouter_api_key'] = os.environ.get('OPENROUTER_API_KEY', '')
+            
+        return config
+    except Exception as e:
+        logging.error(f"Error loading config: {str(e)}")
+        return {}
+
+def run_experiment_thread(config):
+    """Run the experiment in a background thread"""
+    global experiment_running, experiment_results
+    
+    try:
+        # Create experiment
+        bart = BARTExperiment(
+            min_pumps=config.get('min_pumps', 1),
+            max_pumps=config.get('max_pumps', 20),
+            reward_per_pump=config.get('reward_per_pump', 0.10),
+            num_balloons=config.get('num_balloons', 5),
+            model=config.get('model', 'openai/gpt-4o'),
+            api_key=config.get('openrouter_api_key')
+        )
+        
+        # Run experiment
+        results = bart.run_experiment()
+        
+        # Log results
+        log_data = log_experiment_results(config, results)
+        
+        # Update global state
+        experiment_results = {
+            'results': results,
+            'summary': log_data['summary'],
+            'json_file': log_data['json_file'],
+            'csv_file': log_data['csv_file'],
+        }
+    except Exception as e:
+        logging.error(f"Error in experiment thread: {str(e)}")
+        experiment_results = {'error': str(e)}
+    finally:
+        experiment_running = False
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    """Main route for the application"""
+    global experiment_running, experiment_thread, experiment_config
+    
+    # Load config
+    config = load_config()
+    
+    if request.method == 'POST':
+        # Update config from form
+        config['min_pumps'] = int(request.form.get('min_pumps', config.get('min_pumps', 1)))
+        config['max_pumps'] = int(request.form.get('max_pumps', config.get('max_pumps', 20)))
+        config['reward_per_pump'] = float(request.form.get('reward_per_pump', config.get('reward_per_pump', 0.10)))
+        config['num_balloons'] = int(request.form.get('num_balloons', config.get('num_balloons', 5)))
+        config['model'] = request.form.get('model', config.get('model', 'openai/gpt-4o'))
+        
+        # Save API key if provided
+        api_key = request.form.get('api_key')
+        if api_key:
+            config['openrouter_api_key'] = api_key
+        
+        # Start experiment
+        if not experiment_running:
+            if not config.get('openrouter_api_key'):
+                flash('API key is required to run the experiment', 'error')
+                return render_template('index.html', config=config, running=experiment_running)
+            
+            experiment_running = True
+            experiment_config = config
+            experiment_thread = threading.Thread(target=run_experiment_thread, args=(config,))
+            experiment_thread.daemon = True
+            experiment_thread.start()
+            
+            flash('Experiment started!', 'success')
+            return redirect(url_for('results'))
+    
+    return render_template('index.html', config=config, running=experiment_running)
+
+@app.route('/results')
+def results():
+    """Display experiment results"""
+    global experiment_running, experiment_results
+    
+    if experiment_results and not experiment_running:
+        # If we have complete results, analyze them
+        if 'error' not in experiment_results:
+            analysis = analyze_results(experiment_results['results'])
+            figures = create_plots(analysis)
+            plot_images = [convert_figure_to_base64(fig) for fig in figures]
+            
+            return render_template(
+                'results.html', 
+                results=experiment_results,
+                analysis=analysis,
+                plot_images=plot_images,
+                running=False
+            )
+    
+    # If experiment is still running or no results yet
+    return render_template('results.html', running=experiment_running)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+FILE: logger_utils.py
+----------------------------------------
+import os
+import json
+import csv
+import time
+from datetime import datetime
+import logging
+
+def ensure_dir_exists(dir_path):
+    """Create directory if it doesn't exist"""
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+def get_timestamp():
+    """Return a formatted timestamp for filenames"""
+    return datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+def write_json_log(output_dir, master_log):
+    """Write experiment results to a JSON file"""
+    ensure_dir_exists(output_dir)
+    timestamp = get_timestamp()
+    filename = f"{output_dir}/BART_results_{timestamp}.json"
+    
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(master_log, f, indent=2)
+    
+    logging.info(f"JSON log written to: {filename}")
+    return filename
+
+def write_csv_log(output_dir, results):
+    """Write experiment results to a CSV file"""
+    ensure_dir_exists(output_dir)
+    timestamp = get_timestamp()
+    filename = f"{output_dir}/BART_results_{timestamp}.csv"
+    
+    # Define CSV fields
+    fieldnames = [
+        "balloon_id", "threshold_pumps", "pumps_attempted", 
+        "burst", "earnings", "choices"
+    ]
+    
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        # Write each balloon result as a row
+        for r in results:
+            # Convert choices list to string for CSV
+            r_copy = r.copy()
+            r_copy["choices"] = ", ".join(r_copy["choices"])
+            # Remove the full_responses field which is only in JSON
+            if "full_responses" in r_copy:
+                del r_copy["full_responses"]
+            writer.writerow(r_copy)
+    
+    logging.info(f"CSV log written to: {filename}")
+    return filename
+
+def compute_summary(results):
+    """Compute summary statistics from experiment results"""
+    if not results:
+        return {
+            "total_balloons": 0,
+            "avg_pumps": 0,
+            "burst_rate": 0,
+            "avg_earnings": 0,
+            "total_earnings": 0,
+        }
+    
+    total_balloons = len(results)
+    total_pumps = sum(r["pumps_attempted"] for r in results)
+    burst_count = sum(1 for r in results if r["burst"])
+    total_earnings = sum(r["earnings"] for r in results)
+    
+    return {
+        "total_balloons": total_balloons,
+        "avg_pumps": round(total_pumps / total_balloons, 2),
+        "burst_rate": round(burst_count / total_balloons, 2),
+        "avg_earnings": round(total_earnings / total_balloons, 2),
+        "total_earnings": round(total_earnings, 2),
+    }
+
+def log_experiment_results(config, results):
+    """
+    Log experiment results to both JSON and CSV files.
+    Returns the filenames and computed summary.
+    """
+    output_dir = config.get("output_dir", "logs")
+    
+    # Compute summary stats
+    summary = compute_summary(results)
+    
+    # Create the master log object
+    master_log = {
+        "experiment_name": config.get("experiment_name", "BART_Experiment"),
+        "timestamp": datetime.utcnow().isoformat(),
+        "config": config,
+        "summary": summary,
+        "results": results
+    }
+    
+    # Log to files based on config
+    json_file = None
+    csv_file = None
+    
+    if config.get("log_json", True):
+        json_file = write_json_log(output_dir, master_log)
+    
+    if config.get("log_csv", True):
+        csv_file = write_csv_log(output_dir, results)
+    
+    return {
+        "json_file": json_file,
+        "csv_file": csv_file,
+        "summary": summary,
+        "output_dir": output_dir
+    }
+
+
+FILE: main.py
+----------------------------------------
+import os
+import yaml
+import logging
+import json
+from openrouter_api import OpenRouterAPI
+from bart_experiment import BARTExperiment
+from logger_utils import log_experiment_results
+import analyze_results
+from app import app
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+def load_config():
+    """Load configuration from YAML file"""
+    try:
+        with open('bart_config.yaml', 'r') as file:
+            config = yaml.safe_load(file)
+            
+        # Add API key from environment if not in config
+        if not config.get('openrouter_api_key'):
+            config['openrouter_api_key'] = os.environ.get('OPENROUTER_API_KEY', '')
+            
+        return config
+    except Exception as e:
+        logging.error(f"Error loading config: {str(e)}")
+        return {}
+
+def run_cli_experiment():
+    """Run the BART experiment from the command line"""
+    print("Starting BART Experiment")
+    print("------------------------")
+    
+    # Load configuration
+    config = load_config()
+    
+    if not config:
+        print("Failed to load configuration. Please check bart_config.yaml file.")
+        return
+    
+    if not config.get('openrouter_api_key'):
+        print("No OpenRouter API key found. Please set it in bart_config.yaml or as an environment variable.")
+        return
+    
+    # Log configuration (excluding API key)
+    safe_config = {k: v for k, v in config.items() if k != 'openrouter_api_key'}
+    print(f"Configuration: {json.dumps(safe_config, indent=2)}")
+    
+    # Create and run experiment
+    try:
+        print(f"Running experiment with {config.get('num_balloons')} balloons using model: {config.get('model')}")
+        bart = BARTExperiment(
+            min_pumps=config.get('min_pumps', 1),
+            max_pumps=config.get('max_pumps', 20),
+            reward_per_pump=config.get('reward_per_pump', 0.10),
+            num_balloons=config.get('num_balloons', 5),
+            model=config.get('model', 'openai/gpt-4o'),
+            api_key=config.get('openrouter_api_key')
+        )
+        
+        results = bart.run_experiment()
+        log_data = log_experiment_results(config, results)
+        
+        # Print summary
+        print("\nExperiment Complete!")
+        print(f"Summary: {json.dumps(log_data['summary'], indent=2)}")
+        print(f"Results saved to: {log_data['json_file']} and {log_data['csv_file']}")
+        
+        # Run analysis
+        print("\nAnalyzing results:")
+        analysis = analyze_results.main(log_data['json_file'])
+        
+    except Exception as e:
+        logging.error(f"Error running experiment: {str(e)}")
+        print(f"Error running experiment: {str(e)}")
+
+if __name__ == "__main__":
+    # If run directly, start the Flask app
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+FILE: openrouter_api.py
+----------------------------------------
+import requests
+import logging
+import os
+
+class OpenRouterAPI:
+    """
+    Simple wrapper for calling a model via OpenRouter's unified API.
+    """
+
+    BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+    def __init__(self, api_key=None, model=None):
+        """
+        Initialize the OpenRouter API client.
+        
+        Args:
+            api_key (str, optional): OpenRouter API key. If not provided, will try to get from environment.
+            model (str, optional): Model to use for completion. Example: "openai/gpt-4o"
+        """
+        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
+        self.model = model
+
+    def send_message(self, messages):
+        """
+        Send a message to the model and get a response.
+        
+        Args:
+            messages: list of {"role": "user"|"assistant"|"system", "content": "string"}
+            
+        Returns:
+            The last assistant message as a string.
+        """
+        if not self.api_key:
+            logging.error("No OpenRouter API key provided")
+            return "Error: No API key provided. Please check your configuration."
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            # Optional: identify your app for OpenRouter's ranking
+            "HTTP-Referer": "https://replit.com/bart-experiment",
+            "X-Title": "BART LLM Experiment"
+        }
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": False  # For simplicity, we do a standard (non-streaming) request
+        }
+
+        try:
+            resp = requests.post(self.BASE_URL, headers=headers, json=payload, timeout=60)
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Each "choice" is a potential completion. We typically use choice[0].
+            # We assume a normal non-streaming response => 'message' field is present.
+            choices = data.get("choices", [])
+            if not choices:
+                logging.warning("No completion returned from API. data=%s", data)
+                return ""
+
+            return choices[0]["message"]["content"] or ""
+
+        except requests.RequestException as e:
+            logging.error(f"OpenRouter API call failed: {e}")
+            return f"Error communicating with API: {str(e)}"
+
+
