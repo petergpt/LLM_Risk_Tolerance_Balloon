@@ -1,0 +1,55 @@
+/* Custom styles for BART experiment */
+.balloon-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.balloon-svg {
+    width: 150px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.results-table {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.results-table th {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.experiment-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.balloon-animate {
+    animation: balloon-pulse 2s infinite;
+}
+
+@keyframes balloon-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.plot-container {
+    margin: 30px 0;
+    text-align: center;
+}
+
+.plot-container img {
+    max-width: 100%;
+    border: 1px solid var(--bs-gray-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

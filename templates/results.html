@@ -1,0 +1,187 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">BART Experiment Results</h2>
+    </div>
+    <div class="card-body">
+        {% if running %}
+            <div class="loading-spinner">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4 class="mt-3">Experiment in progress...</h4>
+                    <p>This may take a few minutes depending on the number of balloons and model response time.</p>
+                    <div class="balloon-container">
+                        <svg class="balloon-svg balloon-animate" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <radialGradient id="balloonGradient" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
+                                    <stop offset="0%" stop-color="#ff7675" />
+                                    <stop offset="100%" stop-color="#d63031" />
+                                </radialGradient>
+                            </defs>
+                            <path d="M50,140 Q50,120 50,100" stroke="#333" stroke-width="1.5" fill="none" />
+                            <ellipse cx="50" cy="50" rx="40" ry="45" fill="url(#balloonGradient)" />
+                            <ellipse cx="35" cy="35" rx="10" ry="12" fill="#ffffff" fill-opacity="0.3" />
+                            <circle cx="50" cy="95" r="5" fill="#d63031" />
+                        </svg>
+                    </div>
+                    <button id="refreshButton" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <script>
+                document.getElementById('refreshButton').addEventListener('click', function() {
+                    location.reload();
+                });
+                
+                // Auto refresh every 10 seconds
+                setTimeout(function() {
+                    location.reload();
+                }, 10000);
+            </script>
+        {% elif results and 'error' not in results %}
+            <!-- Summary Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Experiment Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ results.summary.total_balloons }}</h2>
+                                    <p class="mb-0">Total Balloons</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ results.summary.avg_pumps }}</h2>
+                                    <p class="mb-0">Avg Pumps</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>{{ (results.summary.burst_rate * 100)|round|int }}%</h2>
+                                    <p class="mb-0">Burst Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card bg-light text-dark mb-3">
+                                <div class="card-body">
+                                    <h2>${{ results.summary.total_earnings }}</h2>
+                                    <p class="mb-0">Total Earnings</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p>Results have been saved to:</p>
+                        <ul>
+                            {% if results.json_file %}
+                                <li><strong>JSON:</strong> {{ results.json_file }}</li>
+                            {% endif %}
+                            {% if results.csv_file %}
+                                <li><strong>CSV:</strong> {{ results.csv_file }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analysis Plots -->
+            {% if plot_images %}
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Analysis Plots</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for img_str in plot_images %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="plot-container">
+                                        <img src="data:image/png;base64,{{ img_str }}" alt="Analysis Plot">
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Detailed Results -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Detailed Results</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped results-table">
+                            <thead>
+                                <tr>
+                                    <th>Balloon #</th>
+                                    <th>Threshold</th>
+                                    <th>Pumps</th>
+                                    <th>Status</th>
+                                    <th>Earnings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balloon in results.results %}
+                                    <tr>
+                                        <td>{{ balloon.balloon_id }}</td>
+                                        <td>{{ balloon.threshold_pumps }}</td>
+                                        <td>{{ balloon.pumps_attempted }}</td>
+                                        <td>
+                                            {% if balloon.burst %}
+                                                <span class="badge bg-danger">BURST</span>
+                                            {% else %}
+                                                <span class="badge bg-success">CASH OUT</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>${{ balloon.earnings }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Configuration
+                </a>
+            </div>
+        {% elif results and 'error' in results %}
+            <!-- Error State -->
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Error Running Experiment</h4>
+                <p>{{ results.error }}</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Configuration
+            </a>
+        {% else %}
+            <!-- No Results Yet -->
+            <div class="alert alert-info">
+                <h4 class="alert-heading">No Experiment Results</h4>
+                <p>Run an experiment to see results here.</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Configuration
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

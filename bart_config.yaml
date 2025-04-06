@@ -1,0 +1,22 @@
+# ======================
+# BART Experiment Config
+# ======================
+
+experiment_name: "LLM_BART_Experiment"
+
+# Core BART parameters:
+min_pumps: 1
+max_pumps: 20
+reward_per_pump: 0.10
+num_balloons: 5   # Set to 30 or your desired count
+# You can easily adjust these values for debugging or official runs
+
+# Model & API
+model: "openai/gpt-4o"          # Or anthropic/claude-2.0, etc.
+openrouter_api_key: ""   # Will be loaded from environment variables
+# If you prefer environment variables, you can handle that in code instead.
+
+# Logging
+output_dir: "logs"
+log_json: true
+log_csv: true
