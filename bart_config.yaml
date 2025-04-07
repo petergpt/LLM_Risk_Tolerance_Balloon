@@ -18,26 +18,26 @@ debug_mode: true
 
 # The list of models you want to run
 model_list:
-# "anthropic/claude-3.5-sonnet",
-# "anthropic/claude-3.5-haiku",
-#"anthropic/claude-3.7-sonnet",
-# "anthropic/claude-3.7-sonnet:thinking",
-#"google/gemini-2.0-flash-001",
-# "google/gemini-flash-1.5",
-# "meta-llama/llama-3.3-70b-instruct",
-# "deepseek/deepseek-r1",
-#"deepseek/deepseek-chat",
-# "google/gemini-2.0-pro-exp-02-05:free",
-#"google/gemini-2.5-pro-exp-03-25:free",
-# "qwen/qwen-max",
-# "qwen/qwen-plus",
-# "01-ai/yi-large",
-# "mistralai/mistral-large-2411",
-# "meta-llama/llama-3.1-405b-instruct",
-# "openai/o1",
-# "openai/o1-mini",
+# - anthropic/claude-3.5-sonnet
+# - anthropic/claude-3.5-haiku
+# - anthropic/claude-3.7-sonnet
+# - anthropic/claude-3.7-sonnet:thinking
+# - google/gemini-2.0-flash-001
+# - google/gemini-flash-1.5
+# - meta-llama/llama-3.3-70b-instruct
+# - deepseek/deepseek-r1
+# - deepseek/deepseek-chat
+# - google/gemini-2.0-pro-exp-02-05:free
+# - google/gemini-2.5-pro-exp-03-25:free
+# - qwen/qwen-max
+# - qwen/qwen-plus
+# - 01-ai/yi-large
+# - mistralai/mistral-large-2411
+# - meta-llama/llama-3.1-405b-instruct
+# - openai/o1
+# - openai/o1-mini
  - openai/gpt-4o-2024-11-20
-#"openai/gpt-4o-mini",
-# "openai/o3-mini",
-# "openai/o3-mini-high",
-# "openai/gpt-4.5-preview",
+# - openai/gpt-4o-mini
+# - openai/o3-mini
+# - openai/o3-mini-high
+# - openai/gpt-4.5-preview
