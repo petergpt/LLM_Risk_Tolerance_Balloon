@@ -1,3 +1,0 @@
-model,total_balloons,avg_pumps,adjusted_pumps,burst_rate,avg_earnings,total_earnings
-anthropic/claude-3.5-sonnet,5,3.8,4.5,0.2,0.36,1.8
-ALL,5,3.8,4.5,0.2,0.36,1.8

@@ -1,7 +1,0 @@
-model,total_balloons,avg_pumps,adjusted_pumps,burst_rate,avg_earnings,total_earnings
-anthropic/claude-3.7-sonnet,5,8.2,9.5,0.2,0.76,3.8
-deepseek/deepseek-chat,5,8.4,9.75,0.2,0.78,3.9
-google/gemini-2.0-flash-001,5,3.4,3.5,0.2,0.28,1.4
-openai/gpt-4o-2024-11-20,5,15.6,0.0,1.0,0.0,0.0
-openai/gpt-4o-mini,5,4.0,4.25,0.2,0.34,1.7
-ALL,25,7.92,6.75,0.36,0.43,10.8

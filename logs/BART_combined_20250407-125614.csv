@@ -1,6 +1,0 @@
-model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices,full_responses
-anthropic/claude-3.5-sonnet,1,15,7,False,0.7,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Cash Out
-anthropic/claude-3.5-sonnet,2,17,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Pump | Cash Out
-anthropic/claude-3.5-sonnet,3,1,1,True,0.0,PUMP,Pump
-anthropic/claude-3.5-sonnet,4,16,2,False,0.2,"PUMP, PUMP, CASH OUT",Pump | Pump | Cash Out
-anthropic/claude-3.5-sonnet,5,6,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Cash Out
