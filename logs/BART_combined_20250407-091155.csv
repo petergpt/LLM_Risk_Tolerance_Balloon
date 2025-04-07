@@ -1,0 +1,6 @@
+model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
+openai/gpt-3.5-turbo,1,4,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT"
+openai/gpt-3.5-turbo,2,3,3,True,0.0,"PUMP, PUMP, PUMP"
+openai/gpt-3.5-turbo,3,20,6,False,0.6,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
+openai/gpt-3.5-turbo,4,15,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT"
+openai/gpt-3.5-turbo,5,10,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT"

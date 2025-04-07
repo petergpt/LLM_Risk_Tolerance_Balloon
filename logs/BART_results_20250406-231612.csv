@@ -1,6 +1,0 @@
-model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
-anthropic/claude-3.7-sonnet,1,19,12,False,1.2,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
-anthropic/claude-3.7-sonnet,2,1,1,True,0.0,PUMP
-anthropic/claude-3.7-sonnet,3,4,4,True,0.0,"PUMP, PUMP, PUMP, PUMP"
-anthropic/claude-3.7-sonnet,4,6,6,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"
-anthropic/claude-3.7-sonnet,5,14,14,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP"

@@ -1,0 +1,16 @@
+model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices,full_responses
+google/gemini-2.0-flash-001,1,5,5,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump
+google/gemini-2.0-flash-001,2,8,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Cash Out
+google/gemini-2.0-flash-001,3,8,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Cash Out
+google/gemini-2.0-flash-001,4,8,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Cash Out
+google/gemini-2.0-flash-001,5,5,5,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-mini,1,5,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Cash Out
+openai/gpt-4o-mini,2,8,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Cash Out
+openai/gpt-4o-mini,3,8,2,False,0.2,"PUMP, PUMP, CASH OUT",Pump | Pump | Cash Out
+openai/gpt-4o-mini,4,8,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Pump | Pump | Cash Out
+openai/gpt-4o-mini,5,5,3,False,0.3,"PUMP, PUMP, PUMP, CASH OUT",Pump | Pump | Pump | Cash Out
+openai/gpt-4o-2024-11-20,1,5,5,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,2,8,8,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,3,8,8,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,4,8,8,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,5,5,5,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump

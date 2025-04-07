@@ -1,6 +1,0 @@
-balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
-1,10,6,False,0.6,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
-2,15,0,False,0.0,CASH OUT
-3,12,4,False,0.4,"PUMP, PUMP, PUMP, PUMP, CASH OUT"
-4,2,2,True,0.0,"PUMP, PUMP"
-5,10,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"

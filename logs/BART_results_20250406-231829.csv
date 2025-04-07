@@ -1,6 +1,0 @@
-model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices
-google/gemini-2.5-pro-exp-03-25:free,1,17,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
-google/gemini-2.5-pro-exp-03-25:free,2,1,0,False,0.0,CASH OUT
-google/gemini-2.5-pro-exp-03-25:free,3,7,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
-google/gemini-2.5-pro-exp-03-25:free,4,19,5,False,0.5,"PUMP, PUMP, PUMP, PUMP, PUMP, CASH OUT"
-google/gemini-2.5-pro-exp-03-25:free,5,1,1,True,0.0,PUMP

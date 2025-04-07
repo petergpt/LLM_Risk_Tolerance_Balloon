@@ -1,0 +1,828 @@
+### FILE TREE (SELECTED)
+
+├─ .upm
+|  └─ store.json (2 lines)
+├─ main.py (219 lines)
+├─ analyze_results.py (170 lines)
+├─ bart_experiment.py (168 lines)
+├─ logger_utils.py (135 lines)
+├─ openrouter_api.py (68 lines)
+├─ pyproject.toml (17 lines)
+└─ bart_config.yaml (10 lines)
+
+
+### FILE CONTENTS
+
+FILE: .upm/store.json
+----------------------------------------
+{"version":2,"languages":{"python3-uv":{"specfileHash":"2fbf90bea1159c8cb1fdee611036fb5f","lockfileHash":"64b52bc2c425d455f95d56625cab295f"}}}
+
+
+FILE: main.py
+----------------------------------------
+import os
+import json
+import yaml
+import logging
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import csv
+from datetime import datetime
+
+from bart_experiment import BARTExperiment
+from logger_utils import log_experiment_results, ensure_dir_exists
+from analyze_results import main as analyze_main
+
+"""
+main.py
+Run multiple BART experiments for different models, no front-end required, then
+compile results into one CSV for easy analysis.
+"""
+
+# --------------------------------------------------------------------------------
+# Global or default logging config
+# --------------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s - %(message)s'
+)
+
+def load_config():
+    """
+    Load BART parameters from bart_config.yaml,
+    ignoring 'model' since we'll pass different ones in code.
+    """
+    try:
+        with open('bart_config.yaml', 'r') as file:
+            config = yaml.safe_load(file) or {}
+        return config
+    except FileNotFoundError:
+        logging.warning("No bart_config.yaml found. Using defaults.")
+        return {}
+    except Exception as e:
+        logging.error(f"Error loading config: {e}")
+        return {}
+
+def run_bart_for_model(model_name, config, api_key=None):
+    """
+    Run the BART experiment for a specific model using the provided config.
+    Returns a dict with summary info (including filepaths) to help consolidate.
+    """
+    # Create the BART experiment
+    bart = BARTExperiment(
+        min_pumps=config.get('min_pumps', 1),
+        max_pumps=config.get('max_pumps', 20),
+        reward_per_pump=config.get('reward_per_pump', 0.10),
+        num_balloons=config.get('num_balloons', 5),
+        model=model_name,
+        api_key=api_key or config.get('openrouter_api_key', '')
+    )
+
+    logging.info(f"Starting BART for model={model_name} ...")
+    results = bart.run_experiment()
+
+    # We pass 'model_name' to log_experiment_results so each CSV row can hold the model
+    log_data = log_experiment_results(config, results, model_name=model_name)
+
+    # Return a small summary dict
+    return {
+        'model': model_name,
+        'results': results,                # All balloon-level data
+        'json_file': log_data['json_file'],
+        'csv_file': log_data['csv_file'],
+        'summary': log_data['summary']
+    }
+
+def get_timestamp():
+    return datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+def write_combined_csv(all_results, output_dir="logs"):
+    """
+    Write one big CSV with all balloon data from every model.
+    Expects each row to have 'model', 'balloon_id', 'threshold_pumps',
+    'pumps_attempted', 'burst', 'earnings', and 'choices'.
+    """
+    ensure_dir_exists(output_dir)
+    timestamp = get_timestamp()
+    filename = f"{output_dir}/BART_combined_{timestamp}.csv"
+
+    fieldnames = [
+        "model",
+        "balloon_id",
+        "threshold_pumps",
+        "pumps_attempted",
+        "burst",
+        "earnings",
+        "choices"
+    ]
+
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in all_results:
+            # Make sure 'choices' is a string
+            if isinstance(row.get("choices"), list):
+                row["choices"] = ", ".join(row["choices"])
+            # Remove full_responses if present
+            if "full_responses" in row:
+                row.pop("full_responses", None)
+            writer.writerow(row)
+
+    logging.info(f"Combined CSV written to: {filename}")
+    return filename
+
+def main():
+    """
+    Main entry point: specify multiple models, run them concurrently or sequentially,
+    and produce logs for each. Then compile everything into one big CSV.
+    """
+    # Load common config from YAML
+    config = load_config()
+
+    # -----------------------------------------------------------
+    # Model list (kept the commented-out lines intact)
+    # -----------------------------------------------------------
+    model_list = [
+        # "anthropic/claude-3.5-sonnet",
+        # "anthropic/claude-3.5-haiku",
+        "anthropic/claude-3.7-sonnet",
+        # "anthropic/claude-3.7-sonnet:thinking",
+        "google/gemini-2.0-flash-001",
+        # "google/gemini-flash-1.5",
+        # "meta-llama/llama-3.3-70b-instruct",
+        # "deepseek/deepseek-r1",
+        "deepseek/deepseek-chat",
+        # "google/gemini-2.0-pro-exp-02-05:free",
+        "google/gemini-2.5-pro-exp-03-25:free",
+        # "qwen/qwen-max",
+        # "qwen/qwen-plus",
+        # "01-ai/yi-large",
+        # "mistralai/mistral-large-2411",
+        # "meta-llama/llama-3.1-405b-instruct",
+        # "openai/o1",
+        # "openai/o1-mini",
+        "openai/gpt-4o-2024-11-20",
+        "openai/gpt-4o-mini",
+        # "openai/o3-mini",
+        # "openai/o3-mini-high",
+        # "openai/gpt-4.5-preview",
+    ]
+
+    # Grab the API key from environment or config
+    api_key = os.environ.get("OPENROUTER_API_KEY", config.get('openrouter_api_key', ''))
+    if not api_key:
+        logging.error("No OpenRouter API key set. Please provide in bart_config.yaml or env var.")
+        return
+
+    concurrency = True  # or False if you want sequential
+
+    # Collect final results for summary
+    experiment_outcomes = []
+    # We'll also keep a big list of all balloon data to produce a combined CSV
+    all_balloon_rows = []
+
+    if concurrency:
+        # Run each model in a separate thread
+        with ThreadPoolExecutor(max_workers=len(model_list)) as executor:
+            future_to_model = {}
+            for m in model_list:
+                future = executor.submit(run_bart_for_model, m, config, api_key)
+                future_to_model[future] = m
+
+            for future in as_completed(future_to_model):
+                model_name = future_to_model[future]
+                try:
+                    outcome = future.result()
+                    experiment_outcomes.append(outcome)
+
+                    # Tag each balloon row with model name
+                    for row in outcome["results"]:
+                        row["model"] = outcome["model"]
+                    all_balloon_rows.extend(outcome["results"])
+
+                    logging.info(f"Done running model={model_name}. CSV={outcome['csv_file']}")
+                except Exception as exc:
+                    logging.error(f"Model {model_name} generated an exception: {exc}")
+
+    else:
+        # Run sequentially
+        for m in model_list:
+            outcome = run_bart_for_model(m, config, api_key)
+            experiment_outcomes.append(outcome)
+
+            for row in outcome["results"]:
+                row["model"] = outcome["model"]
+            all_balloon_rows.extend(outcome["results"])
+
+            logging.info(f"Done running model={m}. CSV={outcome['csv_file']}")
+
+    # -----------------------------------------------------------
+    # 1) Print final consolidated summary
+    # -----------------------------------------------------------
+    print("\n===== ALL EXPERIMENTS COMPLETE =====\n")
+    for outcome in experiment_outcomes:
+        print(f"Model: {outcome['model']}")
+        print(json.dumps(outcome['summary'], indent=2))
+        print(f"JSON Log: {outcome['json_file']}")
+        print(f"CSV Log : {outcome['csv_file']}")
+        print("")
+
+    # 2) Create one combined CSV for all models
+    combined_csv = write_combined_csv(all_balloon_rows, output_dir=config.get("output_dir","logs"))
+    print(f"Combined CSV for all models: {combined_csv}")
+
+    # 3) Optionally run "analyze_results" on each JSON file
+    for outcome in experiment_outcomes:
+        if outcome['json_file']:
+            print(f"== Analysis for model: {outcome['model']} ==")
+            analyze_main(outcome['json_file'])  # This prints a simple summary
+
+if __name__ == "__main__":
+    main()
+
+FILE: analyze_results.py
+----------------------------------------
+import os
+import json
+import csv
+import pandas as pd
+import argparse
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from io import BytesIO
+import base64
+
+def load_json_results(filename):
+    """Load results from a JSON log file"""
+    with open(filename, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data
+
+def load_csv_results(filename):
+    """Load results from a CSV log file"""
+    results = []
+    with open(filename, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Convert string values to appropriate types
+            row['balloon_id'] = int(row['balloon_id'])
+            row['threshold_pumps'] = int(row['threshold_pumps'])
+            row['pumps_attempted'] = int(row['pumps_attempted'])
+            row['burst'] = row['burst'].lower() == 'true'
+            row['earnings'] = float(row['earnings'])
+            # Convert choices back to list
+            row['choices'] = [c.strip() for c in row['choices'].split(',')]
+            results.append(row)
+    return results
+
+def analyze_results(results):
+    """Analyze BART results and return summary statistics"""
+    if not results:
+        return {"error": "No results to analyze"}
+    
+    # For pandas analysis, we'll convert to a DataFrame
+    df = pd.DataFrame(results)
+    
+    # Calculate summary statistics
+    summary = {
+        "total_balloons": len(results),
+        "avg_pumps": df["pumps_attempted"].mean(),
+        "max_pumps": df["pumps_attempted"].max(),
+        "min_pumps": df["pumps_attempted"].min(),
+        "std_pumps": df["pumps_attempted"].std(),
+        "burst_rate": df["burst"].mean(),
+        "avg_earnings": df["earnings"].mean(),
+        "total_earnings": df["earnings"].sum(),
+        # Additional analysis
+        "risk_taking": {
+            "pumps_when_burst": df[df["burst"]]["pumps_attempted"].mean() if any(df["burst"]) else 0,
+            "pumps_when_cashout": df[~df["burst"]]["pumps_attempted"].mean() if any(~df["burst"]) else 0,
+        }
+    }
+    
+    # Learning trend (does the model change behavior over balloons?)
+    balloon_stats = df.groupby("balloon_id").agg({
+        "pumps_attempted": "mean",
+        "burst": "mean",
+        "earnings": "mean"
+    }).reset_index()
+    
+    summary["learning_trend"] = {
+        "balloon_ids": balloon_stats["balloon_id"].tolist(),
+        "avg_pumps_by_balloon": balloon_stats["pumps_attempted"].tolist(),
+        "burst_rate_by_balloon": balloon_stats["burst"].tolist(),
+        "earnings_by_balloon": balloon_stats["earnings"].tolist()
+    }
+    
+    return summary
+
+def create_plots(analysis):
+    """Create visualizations for the analysis results"""
+    figures = []
+    
+    # 1. Pumps vs Balloon ID (learning trend)
+    fig1 = Figure(figsize=(10, 6))
+    ax1 = fig1.add_subplot(111)
+    ax1.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["avg_pumps_by_balloon"], 
+             marker='o', linestyle='-')
+    ax1.set_title('Pumps per Balloon (Learning Trend)')
+    ax1.set_xlabel('Balloon ID')
+    ax1.set_ylabel('Average Pumps')
+    ax1.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig1)
+    
+    # 2. Burst Rate vs Balloon ID
+    fig2 = Figure(figsize=(10, 6))
+    ax2 = fig2.add_subplot(111)
+    ax2.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["burst_rate_by_balloon"], 
+             marker='o', linestyle='-', color='red')
+    ax2.set_title('Burst Rate per Balloon')
+    ax2.set_xlabel('Balloon ID')
+    ax2.set_ylabel('Burst Rate')
+    ax2.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig2)
+    
+    # 3. Earnings vs Balloon ID
+    fig3 = Figure(figsize=(10, 6))
+    ax3 = fig3.add_subplot(111)
+    ax3.plot(analysis["learning_trend"]["balloon_ids"], 
+             analysis["learning_trend"]["earnings_by_balloon"], 
+             marker='o', linestyle='-', color='green')
+    ax3.set_title('Earnings per Balloon')
+    ax3.set_xlabel('Balloon ID')
+    ax3.set_ylabel('Average Earnings ($)')
+    ax3.grid(True, linestyle='--', alpha=0.7)
+    figures.append(fig3)
+    
+    return figures
+
+def convert_figure_to_base64(fig):
+    """Convert a matplotlib figure to base64 string for embedding in HTML"""
+    buf = BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    return img_str
+
+def main(filename=None):
+    """Main function to analyze BART results from a file"""
+    if not filename:
+        # Default to most recent file
+        log_dir = "logs"
+        if not os.path.exists(log_dir):
+            print(f"Error: Log directory {log_dir} not found")
+            return None
+        
+        # Find the most recent JSON file
+        json_files = [f for f in os.listdir(log_dir) if f.endswith('.json')]
+        if not json_files:
+            print(f"Error: No JSON files found in {log_dir}")
+            return None
+        
+        # Sort by modification time (most recent first)
+        json_files.sort(key=lambda f: os.path.getmtime(os.path.join(log_dir, f)), reverse=True)
+        filename = os.path.join(log_dir, json_files[0])
+    
+    # Load and analyze the results
+    if filename.endswith('.json'):
+        data = load_json_results(filename)
+        results = data.get('results', [])
+    elif filename.endswith('.csv'):
+        results = load_csv_results(filename)
+    else:
+        print(f"Error: Unsupported file format: {filename}")
+        return None
+    
+    analysis = analyze_results(results)
+    print(f"Analysis of {filename}:")
+    print(f"Total balloons: {analysis['total_balloons']}")
+    print(f"Average pumps: {analysis['avg_pumps']:.2f}")
+    print(f"Burst rate: {analysis['burst_rate']:.2f}")
+    print(f"Average earnings: ${analysis['avg_earnings']:.2f}")
+    print(f"Total earnings: ${analysis['total_earnings']:.2f}")
+    
+    return analysis
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Analyze BART experiment results')
+    parser.add_argument('--file', type=str, help='Path to the JSON or CSV result file')
+    args = parser.parse_args()
+    
+    main(args.file)
+
+
+FILE: bart_experiment.py
+----------------------------------------
+import random
+import logging
+from openrouter_api import OpenRouterAPI
+
+class BARTExperiment:
+    """
+    Runs the Balloon Analogue Risk Task with an LLM.
+    """
+
+    def __init__(self, min_pumps, max_pumps, reward_per_pump, num_balloons,
+                 model, api_key=None):
+        """
+        Initialize a BART experiment.
+        
+        Args:
+            min_pumps (int): Minimum pumps before burst is possible
+            max_pumps (int): Maximum possible pumps before burst
+            reward_per_pump (float): Monetary reward per pump
+            num_balloons (int): Number of balloons in the experiment
+            model (str): Model identifier for OpenRouter
+            api_key (str, optional): OpenRouter API key
+        """
+        self.min_pumps = min_pumps
+        self.max_pumps = max_pumps
+        self.reward_per_pump = reward_per_pump
+        self.num_balloons = num_balloons
+
+        self.api = OpenRouterAPI(api_key, model)
+
+        self.intro_template = (
+            "You have a virtual balloon.\n"
+            "- Each pump earns you ${:.2f}.\n"
+            "- Each pump increases the chance the balloon will burst.\n"
+            "- If the balloon bursts, you lose everything for that balloon.\n"
+            "You can 'Pump' again or 'Cash Out' anytime.\n"
+            "Current earnings: ${:.2f}\n"
+            "Respond ONLY with 'Pump' or 'Cash Out'."
+        )
+
+        self.intermediate_template = (
+            "The balloon did NOT burst. Current earnings: ${:.2f}.\n"
+            "Do you choose to 'Pump' again or 'Cash Out'?\n"
+            "Respond ONLY with 'Pump' or 'Cash Out'."
+        )
+
+    def run_experiment(self):
+        """
+        Orchestrate the entire set of balloons. Returns a list of balloon results dicts.
+        """
+        results = []
+
+        for balloon_id in range(1, self.num_balloons + 1):
+            threshold = random.randint(self.min_pumps, self.max_pumps)
+            logging.info(f"Starting balloon {balloon_id}/{self.num_balloons} with burst threshold {threshold}")
+            balloon_result = self.run_single_balloon(balloon_id, threshold)
+            results.append(balloon_result)
+            
+            # Log the result of this balloon
+            log_status = "BURST" if balloon_result["burst"] else "CASH OUT"
+            log_msg = (f"Balloon {balloon_id}: {log_status} after {balloon_result['pumps_attempted']} "
+                       f"pumps, earned ${balloon_result['earnings']:.2f}")
+            logging.info(log_msg)
+
+        return results
+
+    def run_single_balloon(self, balloon_id, threshold):
+        """
+        For a single balloon, keep track of pumps until model bursts or cashes out.
+        Returns a dict with all balloon-level data.
+        """
+
+        pumps_attempted = 0
+        choices = []
+        burst = False
+        full_responses = []  # Capture the full text responses too
+
+        # Start with an introduction prompt
+        conversation = [
+            {"role": "system", "content": "You are a neutral game interface."},
+            {
+                "role": "user",
+                "content": self.intro_template.format(
+                    self.reward_per_pump,
+                    0.0
+                )
+            }
+        ]
+
+        while True:
+            response = self.api.send_message(conversation)
+            full_responses.append(response)
+
+            # Clean the response
+            decision = self.extract_decision(response)
+            choices.append(decision)
+
+            if decision == "PUMP":
+                pumps_attempted += 1
+                # Check if it bursts
+                if pumps_attempted >= threshold:
+                    # The balloon bursts!
+                    burst = True
+                    # Notify the model
+                    conversation.append({
+                        "role": "assistant", 
+                        "content": response
+                    })
+                    conversation.append({
+                        "role": "user",
+                        "content": "The balloon has burst! You lost your earnings for this balloon ($0.00)."
+                    })
+                    break
+                else:
+                    # Not burst yet
+                    conversation.append({
+                        "role": "assistant", 
+                        "content": response
+                    })
+                    conversation.append({
+                        "role": "user",
+                        "content": self.intermediate_template.format(
+                            pumps_attempted * self.reward_per_pump
+                        )
+                    })
+
+            elif decision == "CASH OUT":
+                # Model chooses to stop
+                break
+            else:
+                # If we get weird output, let's just forcibly break or we could re-ask
+                logging.warning(f"Unrecognized choice '{decision}'. Forcing 'Cash Out'.")
+                decision = "CASH OUT"
+                break
+
+        # Compute final earnings
+        if burst:
+            earnings = 0.0
+        else:
+            earnings = pumps_attempted * self.reward_per_pump
+
+        return {
+            "balloon_id": balloon_id,
+            "threshold_pumps": threshold,
+            "pumps_attempted": pumps_attempted,
+            "burst": burst,
+            "earnings": round(earnings, 2),
+            "choices": choices,
+            "full_responses": full_responses
+        }
+
+    def extract_decision(self, raw_response):
+        """
+        Normalize the model's response to "PUMP" or "CASH OUT" if possible.
+        E.g. model says "Pump", "pump", "Pump." => we parse it as "PUMP".
+        """
+        # We'll do a minimal parse
+        text = raw_response.strip().lower()
+        if "pump" in text and "cash" not in text:
+            return "PUMP"
+        elif "cash out" in text or "cashout" in text:
+            return "CASH OUT"
+        # If the model included random filler, we do a best guess:
+        if "pump" in text:
+            return "PUMP"
+        if "cash" in text:
+            return "CASH OUT"
+        return "CASH OUT"  # default to safe
+
+
+FILE: logger_utils.py
+----------------------------------------
+# logger_utils.py
+import os
+import json
+import csv
+import time
+import logging
+from datetime import datetime
+
+def ensure_dir_exists(dir_path):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+def get_timestamp():
+    return datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+def write_json_log(output_dir, master_log):
+    ensure_dir_exists(output_dir)
+    timestamp = get_timestamp()
+    filename = f"{output_dir}/BART_results_{timestamp}.json"
+
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(master_log, f, indent=2)
+        logging.info(f"JSON log written to: {filename}")
+    except Exception as e:
+        logging.error(f"Failed to write JSON log {filename}: {e}")
+        filename = None
+
+    return filename
+
+def write_csv_log(output_dir, results, model_name=None):
+    """
+    Write experiment results to a CSV file.
+    If an error occurs, it logs and returns None.
+    This function includes a 'model' column so each row
+    references the model that produced it.
+    """
+    ensure_dir_exists(output_dir)
+    timestamp = get_timestamp()
+    filename = f"{output_dir}/BART_results_{timestamp}.csv"
+
+    fieldnames = [
+        "model",
+        "balloon_id",
+        "threshold_pumps",
+        "pumps_attempted",
+        "burst",
+        "earnings",
+        "choices"
+    ]
+
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for r in results:
+                row = r.copy()
+                # If 'choices' is a list, join them
+                if isinstance(row.get("choices"), list):
+                    row["choices"] = ", ".join(row["choices"])
+                # Remove the 'full_responses' if present
+                row.pop("full_responses", None)
+                # Insert model name
+                row["model"] = model_name if model_name else ""
+                writer.writerow(row)
+
+        logging.info(f"CSV log written to: {filename}")
+        return filename
+
+    except Exception as e:
+        logging.error(f"Failed to write CSV log {filename}: {e}")
+        return None
+
+def compute_summary(results):
+    if not results:
+        return {
+            "total_balloons": 0,
+            "avg_pumps": 0,
+            "burst_rate": 0,
+            "avg_earnings": 0,
+            "total_earnings": 0,
+        }
+
+    total_balloons = len(results)
+    total_pumps = sum(r["pumps_attempted"] for r in results)
+    burst_count = sum(1 for r in results if r["burst"])
+    total_earnings = sum(r["earnings"] for r in results)
+
+    return {
+        "total_balloons": total_balloons,
+        "avg_pumps": round(total_pumps / total_balloons, 2),
+        "burst_rate": round(burst_count / total_balloons, 2),
+        "avg_earnings": round(total_earnings / total_balloons, 2),
+        "total_earnings": round(total_earnings, 2),
+    }
+
+def log_experiment_results(config, results, model_name=None):
+    """
+    Log experiment results to both JSON and CSV files.
+    Returns the filenames and computed summary.
+    """
+    output_dir = config.get("output_dir", "logs")
+
+    # Compute summary stats
+    summary = compute_summary(results)
+
+    # Construct a master log object for JSON
+    master_log = {
+        "experiment_name": config.get("experiment_name", "BART_Experiment"),
+        "timestamp": datetime.utcnow().isoformat(),
+        "config": config,
+        "summary": summary,
+        "results": results,
+        "model": model_name
+    }
+
+    json_file = None
+    csv_file = None
+
+    # Write JSON if desired
+    if config.get("log_json", True):
+        json_file = write_json_log(output_dir, master_log)
+
+    # Write CSV if desired
+    if config.get("log_csv", True):
+        csv_file = write_csv_log(output_dir, results, model_name=model_name)
+
+    return {
+        "json_file": json_file,
+        "csv_file": csv_file,
+        "summary": summary,
+        "output_dir": output_dir
+    }
+
+
+FILE: openrouter_api.py
+----------------------------------------
+import requests
+import logging
+import os
+
+class OpenRouterAPI:
+    """
+    Simple wrapper for calling a model via OpenRouter's unified API.
+    """
+
+    BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+    def __init__(self, api_key=None, model=None):
+        """
+        Initialize the OpenRouter API client.
+        
+        Args:
+            api_key (str, optional): OpenRouter API key. If not provided, will try to get from environment.
+            model (str, optional): Model to use for completion. Example: "openai/gpt-4o"
+        """
+        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
+        self.model = model
+
+    def send_message(self, messages):
+        """
+        Send a message to the model and get a response.
+        
+        Args:
+            messages: list of {"role": "user"|"assistant"|"system", "content": "string"}
+            
+        Returns:
+            The last assistant message as a string.
+        """
+        if not self.api_key:
+            logging.error("No OpenRouter API key provided")
+            return "Error: No API key provided. Please check your configuration."
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            # Optional: identify your app for OpenRouter's ranking
+            "HTTP-Referer": "https://replit.com/bart-experiment",
+            "X-Title": "BART LLM Experiment"
+        }
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": False  # For simplicity, we do a standard (non-streaming) request
+        }
+
+        try:
+            resp = requests.post(self.BASE_URL, headers=headers, json=payload, timeout=60)
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Each "choice" is a potential completion. We typically use choice[0].
+            # We assume a normal non-streaming response => 'message' field is present.
+            choices = data.get("choices", [])
+            if not choices:
+                logging.warning("No completion returned from API. data=%s", data)
+                return ""
+
+            return choices[0]["message"]["content"] or ""
+
+        except requests.RequestException as e:
+            logging.error(f"OpenRouter API call failed: {e}")
+            return f"Error communicating with API: {str(e)}"
+
+
+FILE: pyproject.toml
+----------------------------------------
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "email-validator>=2.2.0",
+    "flask>=3.1.0",
+    "flask-sqlalchemy>=3.1.1",
+    "gunicorn>=23.0.0",
+    "matplotlib>=3.10.1",
+    "pandas>=2.2.3",
+    "psycopg2-binary>=2.9.10",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.3",
+]
+
+
+FILE: bart_config.yaml
+----------------------------------------
+experiment_name: "LLM_BART_Experiment"
+min_pumps: 1
+max_pumps: 20
+reward_per_pump: 0.10
+num_balloons: 5
+
+# We'll remove the 'model' line from here so we can pass them in code instead.
+# openrouter_api_key: "YOUR-OPENROUTER-KEY" 
+# Optionally keep or remove. You can also set it in code or environment.
+
+

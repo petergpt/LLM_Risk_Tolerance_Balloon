@@ -1,0 +1,5 @@
+model,total_balloons,avg_pumps,adjusted_pumps,burst_rate,avg_earnings,total_earnings
+google/gemini-2.0-flash-001,5,5.6,4.75,0.2,0.38,1.9
+openai/gpt-4o-2024-11-20,5,11.4,0.0,1.0,0.0,0.0
+openai/gpt-4o-mini,5,4.2,4.2,0.0,0.42,2.1
+ALL,15,7.07,4.44,0.4,0.27,4.0

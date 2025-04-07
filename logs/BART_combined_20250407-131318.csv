@@ -1,0 +1,6 @@
+model,balloon_id,threshold_pumps,pumps_attempted,burst,earnings,choices,full_responses
+openai/gpt-4o-2024-11-20,1,13,13,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,2,14,14,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,3,3,3,True,0.0,"PUMP, PUMP, PUMP",Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,4,20,20,True,0.0,"PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP, PUMP",Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump | Pump
+openai/gpt-4o-2024-11-20,5,1,1,True,0.0,PUMP,Pump
