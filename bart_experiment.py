@@ -106,7 +106,6 @@ class BARTExperiment:
         error_flag = False
         error_message = ""
 
-        # We'll continue a loop, each time capturing the model's response
         while True:
             decision, response_text = self.get_decision_from_model(conversation)
 
@@ -125,16 +124,26 @@ class BARTExperiment:
 
             if decision == "PUMP":
                 pumps_attempted += 1
+
+                # Log a short line if debug is off, so we see what's happening
+                if not self.debug:
+                    logging.info(
+                        f"[{self.model}] Balloon {balloon_id} => PUMP => "
+                        f"total pumps={pumps_attempted}, threshold={threshold}, still safe"
+                    )
+
                 if pumps_attempted >= threshold:
                     # The balloon bursts
                     burst = True
-                    # We'll add a user message to note the burst
                     conversation.append({
                         "role": "user",
-                        "content": (
-                            "The balloon has BURST! You lost all earnings for this balloon ($0)."
-                        )
+                        "content": "The balloon has BURST! You lost all earnings for this balloon ($0)."
                     })
+                    if not self.debug:
+                        logging.info(
+                            f"[{self.model}] Balloon {balloon_id} => BURST => "
+                            f"total pumps={pumps_attempted} (final earn=$0.00)"
+                        )
                     break
                 else:
                     current_earnings = pumps_attempted * self.reward_per_pump
@@ -148,6 +157,13 @@ class BARTExperiment:
                     })
 
             else:  # "CASH OUT"
+                # The user chooses to stop
+                if not self.debug:
+                    final_earn = pumps_attempted * self.reward_per_pump
+                    logging.info(
+                        f"[{self.model}] Balloon {balloon_id} => CASH OUT => "
+                        f"total pumps={pumps_attempted} (final earn=${final_earn:.2f})"
+                    )
                 break
 
         # Compute final data for this balloon
